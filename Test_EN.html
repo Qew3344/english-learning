@@ -1,0 +1,759 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Practice</title>
+
+<style>
+:root {
+  --bg: #f3f5f9;
+  --card: #ffffff;
+  --text: #182230;
+  --muted: #687386;
+  --accent: #315efb;
+  --green: #16834a;
+  --red: #c33d45;
+  --border: #e1e6ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 28px 16px;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  width: min(100%, 680px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 32px;
+  box-shadow: 0 14px 45px rgba(28,42,75,.08);
+}
+
+.topline {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 10px;
+}
+
+.tag {
+  color: var(--accent);
+  background: #edf1ff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.counter {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 30px;
+}
+
+.subtitle {
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+
+.progress-track {
+  height: 7px;
+  background: #edf0f5;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 30px;
+}
+
+.progress {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  transition: width .2s;
+}
+
+.label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.phrase {
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  background: #f7f8fc;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  font-size: 27px;
+  font-weight: bold;
+  line-height: 1.4;
+  margin-bottom: 22px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 105px;
+  resize: vertical;
+  padding: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 13px;
+  font: inherit;
+  font-size: 17px;
+  outline: none;
+}
+
+textarea:focus {
+  border-color: var(--accent);
+}
+
+textarea:disabled {
+  background: #f8f9fb;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+button {
+  border: 0;
+  border-radius: 11px;
+  padding: 12px 17px;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.primary {
+  color: white;
+  background: var(--accent);
+}
+
+.primary:hover {
+  background: #244bd1;
+}
+
+.secondary {
+  background: #eef1f6;
+  color: #273247;
+}
+
+.result {
+  display: none;
+  margin-top: 18px;
+  padding: 15px;
+  border-radius: 12px;
+  line-height: 1.5;
+}
+
+.result.good {
+  display: block;
+  color: #11683b;
+  background: #eaf7ef;
+}
+
+.result.bad {
+  display: block;
+  color: #9d2932;
+  background: #fff0f0;
+}
+
+.answer {
+  display: none;
+  margin-top: 13px;
+  padding: 17px;
+  border: 1px dashed #b9c5dc;
+  border-radius: 12px;
+  background: #fafbff;
+  line-height: 1.8;
+}
+
+.answer strong {
+  color: var(--accent);
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.score {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+@media(max-width: 480px) {
+  .app {
+    padding: 20px;
+  }
+
+  .actions button {
+    flex: 1 1 40%;
+  }
+
+  .bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+  <div class="topline">
+    <span class="tag">ENGLISH PRACTICE</span>
+    <span class="counter" id="counter"></span>
+  </div>
+
+  <h1>Переклади англійською</h1>
+
+  <p class="subtitle">
+    Прочитай українську фразу, напиши свій варіант
+    англійською та перевір відповідь.
+  </p>
+
+  <div class="progress-track">
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <span class="label">Переклади цю фразу</span>
+
+  <div class="phrase" id="question"></div>
+
+  <label class="label" for="userAnswer">
+    Твоя відповідь англійською
+  </label>
+
+  <textarea
+    id="userAnswer"
+    placeholder="Напиши переклад тут..."
+  ></textarea>
+
+  <div class="actions">
+    <button class="primary" id="checkBtn">
+      Перевірити
+    </button>
+
+    <button class="secondary" id="showBtn">
+      Показати відповідь
+    </button>
+
+    <button class="secondary" id="clearBtn">
+      Очистити
+    </button>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <div class="answer" id="answerBox"></div>
+
+  <p class="hint">
+    Порада: спочатку спробуй перекласти самостійно.
+    Якщо не виходить — відкрий відповідь і повтори її вголос.
+  </p>
+
+  <div class="bottom">
+
+    <span class="score" id="score">
+      Правильно: 0 із 0 перевірених
+    </span>
+
+    <button class="primary" id="nextBtn">
+      Наступна фраза →
+    </button>
+
+  </div>
+
+</main>
+
+<script>
+
+// ====================================
+// 1. СПИСОК АНГЛІЙСЬКИХ ФРАЗ
+// ====================================
+
+const phrases = [
+
+  {
+    uk: "Я хочу вивчити англійську.",
+    variants: [
+      "I want to learn English.",
+      "I want to study English."
+    ]
+  },
+
+  {
+    uk: "Як справи?",
+    variants: [
+      "How are you?",
+      "How's it going?"
+    ]
+  },
+
+  {
+    uk: "Я не розумію.",
+    variants: [
+      "I don't understand."
+    ]
+  },
+
+  {
+    uk: "Можеш мені допомогти?",
+    variants: [
+      "Can you help me?",
+      "Could you help me?"
+    ]
+  },
+
+  {
+    uk: "Повтори, будь ласка.",
+    variants: [
+      "Please repeat.",
+      "Could you repeat that, please?",
+      "Can you repeat that, please?"
+    ]
+  },
+
+  {
+    uk: "Я трохи говорю англійською.",
+    variants: [
+      "I speak a little English.",
+      "I can speak a little English."
+    ]
+  },
+
+  {
+    uk: "Я навчаюся на мехатроніці.",
+    variants: [
+      "I study mechatronics.",
+      "I'm studying mechatronics."
+    ]
+  },
+
+  {
+    uk: "Мені потрібно більше практики.",
+    variants: [
+      "I need more practice."
+    ]
+  },
+
+  {
+    uk: "Я не знаю, як це сказати англійською.",
+    variants: [
+      "I don't know how to say this in English."
+    ]
+  },
+
+  {
+    uk: "Дай мені хвилину.",
+    variants: [
+      "Give me a minute.",
+      "Give me a moment."
+    ]
+  },
+
+  {
+    uk: "Я зараз повернуся.",
+    variants: [
+      "I'll be right back.",
+      "I will be right back."
+    ]
+  },
+
+  {
+    uk: "Що ти маєш на увазі?",
+    variants: [
+      "What do you mean?"
+    ]
+  },
+
+  {
+    uk: "Я згоден з тобою.",
+    variants: [
+      "I agree with you.",
+      "I agree."
+    ]
+  },
+
+  {
+    uk: "Я не впевнений.",
+    variants: [
+      "I'm not sure.",
+      "I am not sure."
+    ]
+  },
+
+  {
+    uk: "Дозволь мені подумати.",
+    variants: [
+      "Let me think."
+    ]
+  },
+
+  {
+    uk: "Я намагаюся говорити англійською.",
+    variants: [
+      "I'm trying to speak English.",
+      "I am trying to speak English."
+    ]
+  },
+
+  {
+    uk: "Можеш говорити повільніше?",
+    variants: [
+      "Can you speak more slowly?",
+      "Could you speak more slowly?"
+    ]
+  },
+
+  {
+    uk: "Я хочу поставити запитання.",
+    variants: [
+      "I want to ask a question.",
+      "I'd like to ask a question."
+    ]
+  },
+
+  {
+    uk: "Дякую за допомогу.",
+    variants: [
+      "Thank you for your help.",
+      "Thanks for your help."
+    ]
+  },
+
+  {
+    uk: "Побачимося завтра.",
+    variants: [
+      "See you tomorrow."
+    ]
+  }
+
+];
+
+
+// ====================================
+// 2. ВИПАДКОВЕ ПЕРЕМІШУВАННЯ
+// ====================================
+
+// Щоразу при відкритті сторінки
+// порядок фраз буде змінюватися.
+
+function shuffle(array) {
+
+  for (let i = array.length - 1; i > 0; i--) {
+
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [array[i], array[j]] = [array[j], array[i]];
+
+  }
+
+  return array;
+
+}
+
+shuffle(phrases);
+
+
+// ====================================
+// 3. ЗМІННІ
+// ====================================
+
+let current = 0;
+
+let checkedCount = 0;
+let correctCount = 0;
+
+const checked = new Set();
+
+const questionEl = document.getElementById("question");
+const inputEl = document.getElementById("userAnswer");
+const resultEl = document.getElementById("result");
+const answerBox = document.getElementById("answerBox");
+const counterEl = document.getElementById("counter");
+const progressEl = document.getElementById("progress");
+const scoreEl = document.getElementById("score");
+
+
+// ====================================
+// 4. НОРМАЛІЗАЦІЯ ВІДПОВІДІ
+// ====================================
+
+function normalize(text) {
+
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[’‘]/g, "'")
+    .replace(/[.,!?;:]/g, "")
+    .replace(/\s+/g, " ");
+
+}
+
+
+// ====================================
+// 5. ВІДОБРАЖЕННЯ ПИТАННЯ
+// ====================================
+
+function render() {
+
+  const item = phrases[current];
+
+  questionEl.textContent = item.uk;
+
+  counterEl.textContent =
+    `Фраза ${current + 1} із ${phrases.length}`;
+
+  progressEl.style.width =
+    `${((current + 1) / phrases.length) * 100}%`;
+
+  inputEl.value = "";
+  inputEl.disabled = false;
+
+  resultEl.className = "result";
+  resultEl.textContent = "";
+
+  answerBox.style.display = "none";
+  answerBox.innerHTML = "";
+
+  document.getElementById("nextBtn").textContent =
+    current === phrases.length - 1
+      ? "Почати спочатку ↻"
+      : "Наступна фраза →";
+
+  updateScore();
+
+  inputEl.focus();
+
+}
+
+
+// ====================================
+// 6. ПЕРЕВІРКА ВІДПОВІДІ
+// ====================================
+
+function checkAnswer() {
+
+  const typed = normalize(inputEl.value);
+
+  if (!typed) {
+
+    resultEl.className = "result bad";
+
+    resultEl.textContent =
+      "Спочатку напиши свій варіант відповіді.";
+
+    return;
+
+  }
+
+  const item = phrases[current];
+
+  const accepted = item.variants.map(normalize);
+
+  const isCorrect = accepted.includes(typed);
+
+  if (!checked.has(current)) {
+
+    checked.add(current);
+
+    checkedCount++;
+
+    if (isCorrect) {
+      correctCount++;
+    }
+
+  }
+
+  if (isCorrect) {
+
+    resultEl.className = "result good";
+
+    resultEl.textContent =
+      "Правильно! Чудова робота 🎉";
+
+  } else {
+
+    resultEl.className = "result bad";
+
+    resultEl.textContent =
+      "Не зовсім правильно. Спробуй ще раз або подивись правильну відповідь.";
+
+  }
+
+  inputEl.disabled = true;
+
+  updateScore();
+
+}
+
+
+// ====================================
+// 7. ПОКАЗАТИ ПРАВИЛЬНУ ВІДПОВІДЬ
+// ====================================
+
+function showAnswer() {
+
+  const item = phrases[current];
+
+  answerBox.style.display = "block";
+
+  answerBox.innerHTML =
+    "<strong>Правильний переклад:</strong><br>" +
+    item.variants.map(escapeHtml).join("<br>");
+
+}
+
+
+// Захист від вставлення HTML у відповідь
+
+function escapeHtml(text) {
+
+  return text.replace(/[&<>"']/g, char => ({
+
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+
+  })[char]);
+
+}
+
+
+// ====================================
+// 8. ОНОВЛЕННЯ РЕЗУЛЬТАТУ
+// ====================================
+
+function updateScore() {
+
+  scoreEl.textContent =
+    `Правильно: ${correctCount} із ${checkedCount} перевірених`;
+
+}
+
+
+// ====================================
+// 9. КНОПКИ
+// ====================================
+
+document.getElementById("checkBtn")
+  .addEventListener("click", checkAnswer);
+
+
+document.getElementById("showBtn")
+  .addEventListener("click", showAnswer);
+
+
+document.getElementById("clearBtn")
+  .addEventListener("click", () => {
+
+    inputEl.value = "";
+
+    inputEl.disabled = false;
+
+    resultEl.className = "result";
+
+    resultEl.textContent = "";
+
+    inputEl.focus();
+
+  });
+
+
+document.getElementById("nextBtn")
+  .addEventListener("click", () => {
+
+    if (current === phrases.length - 1) {
+
+      // Новий випадковий порядок
+
+      shuffle(phrases);
+
+      current = 0;
+
+      checkedCount = 0;
+      correctCount = 0;
+
+      checked.clear();
+
+    } else {
+
+      current++;
+
+    }
+
+    render();
+
+  });
+
+
+// ====================================
+// 10. CTRL + ENTER ДЛЯ ПЕРЕВІРКИ
+// ====================================
+
+inputEl.addEventListener("keydown", event => {
+
+  if (event.ctrlKey && event.key === "Enter") {
+
+    checkAnswer();
+
+  }
+
+});
+
+
+// ====================================
+// 11. ЗАПУСК САЙТУ
+// ====================================
+
+render();
+
+</script>
+
+</body>
+</html>
