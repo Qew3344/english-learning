@@ -1,0 +1,488 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Practice — 15 phrases</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: #f1f4f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: #202938;
+}
+
+.container {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+h1 {
+  text-align: center;
+  margin-top: 0;
+  font-size: 27px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #687386;
+  margin-bottom: 25px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  color: #687386;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.progress {
+  height: 9px;
+  background: #e7ebf2;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 25px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #3978df;
+  transition: width 0.3s;
+}
+
+.card {
+  background: #f7f9fc;
+  padding: 25px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.label {
+  color: #718096;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.phrase {
+  font-size: 25px;
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 15px;
+  font-size: 17px;
+  border: 2px solid #dce2eb;
+  border-radius: 10px;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+
+textarea:focus {
+  border-color: #3978df;
+}
+
+.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+button {
+  border: none;
+  padding: 13px 15px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover { opacity: 0.88; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.primary {
+  background: #3978df;
+  color: white;
+}
+
+.secondary {
+  background: #e9eef7;
+  color: #26364d;
+}
+
+.success {
+  background: #e5f7ec;
+  color: #16733a;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+  line-height: 1.5;
+}
+
+.error {
+  background: #fff0ef;
+  color: #b83232;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+  line-height: 1.5;
+}
+
+.answer {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #16733a;
+}
+
+.score {
+  text-align: center;
+  margin-top: 25px;
+  color: #596579;
+}
+
+.finish {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.finish h2 { font-size: 28px; }
+.hidden { display: none; }
+
+@media (max-width: 480px) {
+  .container { padding: 20px; }
+  .phrase { font-size: 21px; }
+  .buttons { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <h1>English Practice</h1>
+  <p class="subtitle">15 корисних розмовних фраз</p>
+
+  <div id="quiz">
+    <div class="progress-info">
+      <span id="counter">Питання 1 із 15</span>
+      <span id="percentage">0%</span>
+    </div>
+
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Переклади англійською:</div>
+      <div class="phrase" id="question"></div>
+    </div>
+
+    <textarea
+      id="userAnswer"
+      placeholder="Введи свою відповідь англійською..."
+    ></textarea>
+
+    <div class="buttons">
+      <button class="primary" id="checkBtn" onclick="checkAnswer()">
+        Перевірити
+      </button>
+
+      <button class="secondary" onclick="showAnswer()">
+        Показати відповідь
+      </button>
+
+      <button class="secondary" onclick="clearAnswer()">
+        Очистити
+      </button>
+
+      <button class="primary" id="nextBtn" onclick="nextQuestion()" disabled>
+        Наступна фраза →
+      </button>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="score">
+      Правильних відповідей: <strong id="score">0</strong> / 15
+    </div>
+  </div>
+
+  <div id="finish" class="finish hidden">
+    <h2>Тест завершено!</h2>
+    <p id="finalScore"></p>
+    <p id="finalMessage"></p>
+    <button class="primary" onclick="restartQuiz()">
+      Пройти ще раз
+    </button>
+  </div>
+
+</div>
+
+<script>
+const phrases = [
+  {
+    uk: "Що ти маєш на увазі?",
+    en: ["What do you mean?"]
+  },
+  {
+    uk: "Я просто дивлюся.",
+    en: ["I'm just looking.", "I am just looking."]
+  },
+  {
+    uk: "Давно не бачилися.",
+    en: ["It's been a while.", "It has been a while."]
+  },
+  {
+    uk: "Подивлюся, що зможу зробити.",
+    en: ["I'll see what I can do.", "I will see what I can do."]
+  },
+  {
+    uk: "Це гарна ідея.",
+    en: ["That's a good idea.", "That is a good idea."]
+  },
+  {
+    uk: "Я нікуди не поспішаю.",
+    en: ["I'm not in a rush.", "I am not in a rush."]
+  },
+  {
+    uk: "Звучить весело.",
+    en: ["It sounds like fun."]
+  },
+  {
+    uk: "Мені не хочеться.",
+    en: ["I don't feel like it.", "I do not feel like it."]
+  },
+  {
+    uk: "Дай знати, коли будеш готовий.",
+    en: ["Let me know when you're ready.", "Let me know when you are ready."]
+  },
+  {
+    uk: "Буду там за хвилину.",
+    en: ["I'll be there in a minute.", "I will be there in a minute."]
+  },
+  {
+    uk: "Я не звертав уваги.",
+    en: ["I wasn't paying attention.", "I was not paying attention."]
+  },
+  {
+    uk: "Я не це мав на увазі.",
+    en: ["That's not what I meant.", "That is not what I meant."]
+  },
+  {
+    uk: "Я ще не вирішив.",
+    en: ["I haven't decided yet.", "I have not decided yet."]
+  },
+  {
+    uk: "Уже стає пізно.",
+    en: ["It's getting late.", "It is getting late."]
+  },
+  {
+    uk: "Я цим займуся.",
+    en: ["I'll take care of it.", "I will take care of it."]
+  }
+];
+
+let questions = [];
+let current = 0;
+let score = 0;
+let answered = false;
+
+function shuffle(array) {
+  const copy = [...array];
+
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy;
+}
+
+function normalize(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[.,!?;:'"“”‘’]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function startQuiz() {
+  questions = shuffle(phrases);
+  current = 0;
+  score = 0;
+
+  document.getElementById("quiz").classList.remove("hidden");
+  document.getElementById("finish").classList.add("hidden");
+
+  updateScore();
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+
+  const item = questions[current];
+
+  document.getElementById("question").textContent = item.uk;
+
+  document.getElementById("counter").textContent =
+    `Питання ${current + 1} із ${questions.length}`;
+
+  const percent = (current / questions.length) * 100;
+
+  document.getElementById("percentage").textContent =
+    Math.round(percent) + "%";
+
+  document.getElementById("progressBar").style.width =
+    percent + "%";
+
+  document.getElementById("userAnswer").value = "";
+  document.getElementById("feedback").innerHTML = "";
+
+  document.getElementById("checkBtn").disabled = false;
+  document.getElementById("nextBtn").disabled = true;
+
+  document.getElementById("nextBtn").textContent =
+    current === questions.length - 1
+      ? "Завершити тест"
+      : "Наступна фраза →";
+
+  document.getElementById("userAnswer").focus();
+}
+
+function checkAnswer() {
+  if (answered) return;
+
+  const input = document.getElementById("userAnswer").value;
+  const user = normalize(input);
+
+  if (!user) {
+    document.getElementById("feedback").innerHTML =
+      '<div class="error">Спочатку введи свою відповідь.</div>';
+    return;
+  }
+
+  const item = questions[current];
+
+  const correct = item.en.some(answer =>
+    normalize(answer) === user
+  );
+
+  answered = true;
+
+  if (correct) {
+    score++;
+
+    document.getElementById("feedback").innerHTML =
+      '<div class="success">Чудово! Правильна відповідь! 🎉</div>';
+  } else {
+    document.getElementById("feedback").innerHTML =
+      `<div class="error">
+        Не зовсім правильно.
+        <div class="answer">Правильна відповідь: ${item.en[0]}</div>
+      </div>`;
+  }
+
+  document.getElementById("checkBtn").disabled = true;
+  document.getElementById("nextBtn").disabled = false;
+
+  updateScore();
+}
+
+function showAnswer() {
+  if (answered) return;
+
+  const item = questions[current];
+
+  document.getElementById("feedback").innerHTML =
+    `<div class="success">
+      Правильна відповідь:
+      <div class="answer">${item.en[0]}</div>
+    </div>`;
+
+  answered = true;
+  document.getElementById("checkBtn").disabled = true;
+  document.getElementById("nextBtn").disabled = false;
+}
+
+function clearAnswer() {
+  if (answered) return;
+
+  document.getElementById("userAnswer").value = "";
+  document.getElementById("feedback").innerHTML = "";
+  document.getElementById("userAnswer").focus();
+}
+
+function nextQuestion() {
+  if (!answered) return;
+
+  current++;
+
+  if (current < questions.length) {
+    showQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function updateScore() {
+  document.getElementById("score").textContent = score;
+}
+
+function finishQuiz() {
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("finish").classList.remove("hidden");
+
+  document.getElementById("progressBar").style.width = "100%";
+
+  document.getElementById("finalScore").textContent =
+    `Твій результат: ${score} із ${questions.length}`;
+
+  let message = "";
+
+  if (score === 15) {
+    message = "Ідеально! Ти знаєш усі 15 фраз! 🏆";
+  } else if (score >= 12) {
+    message = "Чудовий результат! Продовжуй у тому ж дусі!";
+  } else if (score >= 9) {
+    message = "Добре! Але деякі фрази варто повторити.";
+  } else {
+    message = "Не засмучуйся. Повтори фрази та спробуй ще раз!";
+  }
+
+  document.getElementById("finalMessage").textContent = message;
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+
+document.getElementById("userAnswer").addEventListener("keydown", function(event) {
+  if (event.ctrlKey && event.key === "Enter") {
+    checkAnswer();
+  }
+});
+
+startQuiz();
+</script>
+</body>
+</html>
