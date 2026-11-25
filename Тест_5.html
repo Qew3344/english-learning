@@ -1,0 +1,467 @@
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Practice — Phrase Trainer</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  background: #f1f4f9;
+  color: #202938;
+}
+
+.container {
+  background: white;
+  width: 100%;
+  max-width: 650px;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+}
+
+h1 { text-align: center; margin-top: 0; }
+.subtitle { text-align: center; color: #687386; }
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin: 25px 0 8px;
+  color: #687386;
+  font-size: 14px;
+}
+
+.progress {
+  height: 9px;
+  background: #e7ebf2;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 25px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: #3978df;
+  transition: width .3s;
+}
+
+.card {
+  background: #f7f9fc;
+  padding: 25px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.label { color: #718096; font-size: 13px; margin-bottom: 10px; }
+
+.phrase {
+  font-size: 25px;
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+textarea {
+  width: 100%;
+  min-height: 95px;
+  padding: 15px;
+  font-size: 17px;
+  border: 2px solid #dce2eb;
+  border-radius: 10px;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+
+textarea:focus { border-color: #3978df; }
+
+.buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+button {
+  border: none;
+  padding: 13px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover { opacity: .88; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+.primary { background: #3978df; color: white; }
+.secondary { background: #e9eef7; color: #26364d; }
+
+.success, .error {
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+  line-height: 1.5;
+}
+
+.success { background: #e5f7ec; color: #16733a; }
+.error { background: #fff0ef; color: #b83232; }
+
+.answer { margin-top: 10px; font-weight: bold; color: #16733a; }
+
+.score { text-align: center; margin-top: 25px; color: #596579; }
+
+.finish { text-align: center; padding: 20px 0; }
+.finish h2 { font-size: 28px; }
+.hidden { display: none; }
+
+@media(max-width:480px) {
+  .container { padding: 20px; }
+  .phrase { font-size: 21px; }
+  .buttons { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h1>English Practice</h1>
+  <p class="subtitle">Великий тренажер розмовних англійських фраз</p>
+
+  <div id="quiz">
+    <div class="progress-info">
+      <span id="counter"></span>
+      <span id="percentage">0%</span>
+    </div>
+
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Переклади англійською:</div>
+      <div class="phrase" id="question"></div>
+    </div>
+
+    <textarea id="userAnswer"
+      placeholder="Введи свою відповідь англійською..."></textarea>
+
+    <div class="buttons">
+      <button class="primary" id="checkBtn" onclick="checkAnswer()">
+        Перевірити
+      </button>
+      <button class="secondary" onclick="showAnswer()">
+        Показати відповідь
+      </button>
+      <button class="secondary" onclick="clearAnswer()">
+        Очистити
+      </button>
+      <button class="primary" id="nextBtn" onclick="nextQuestion()" disabled>
+        Наступна фраза →
+      </button>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div class="score">
+      Правильних відповідей:
+      <strong id="score">0</strong> / <span id="total"></span>
+    </div>
+  </div>
+
+  <div id="finish" class="finish hidden">
+    <h2>Тест завершено!</h2>
+    <p id="finalScore"></p>
+    <p id="finalMessage"></p>
+    <button class="primary" onclick="restartQuiz()">Пройти ще раз</button>
+  </div>
+</div>
+
+<script>
+const phrases = [
+  ["Це залежить від ситуації.", "It depends on the situation."],
+  ["Я повністю з тобою погоджуюся.", "I totally agree with you."],
+  ["Як справи?", "How's it going?"],
+  ["Що нового? / Як справи?", "What's up?"],
+  ["Я просто жартую.", "I'm just kidding."],
+  ["Не хвилюйся / Немає проблем.", "No worries."],
+  ["Звучить добре!", "Sounds good!"],
+  ["Дай мені секунду.", "Give me a second."],
+  ["Я не розумію.", "I don't get it."],
+  ["Забудь / Неважливо.", "Never mind."],
+  ["До речі.", "By the way."],
+  ["Це правда.", "That's true."],
+  ["Що ти думаєш?", "What do you think?"],
+  ["Це не має значення.", "It doesn't matter."],
+  ["Ти серйозно?", "Are you serious?"],
+  ["Я взагалі не знаю.", "I have no idea."],
+  ["Не поспішай.", "Take your time."],
+  ["Це неймовірно!", "That's amazing!"],
+  ["Я вже в дорозі.", "I'm on my way."],
+  ["Дай мені знати.", "Let me know."],
+  ["Це логічно / Тепер зрозуміло.", "It makes sense."],
+  ["Я розумію, що ти маєш на увазі.", "I see what you mean."],
+  ["Зачекай хвилинку.", "Hold on a minute."],
+  ["Я запізнююся.", "I'm running late."],
+  ["Це чудово звучить!", "That sounds great!"],
+  ["Таке буває.", "It happens."],
+  ["Не переймайся через це.", "Don't worry about it."],
+  ["У мене немає настрою.", "I'm not in the mood."],
+  ["Що сталося?", "What happened?"],
+  ["Вирішувати тобі.", "It's up to you."],
+  ["Я не проти.", "I don't mind."],
+  ["Будьмо на зв'язку.", "Keep in touch."],
+  ["Ніколи не знаєш.", "You never know."],
+  ["Я з нетерпінням цього чекаю.", "I'm looking forward to it."],
+  ["Це слушна думка.", "That's a good point."],
+  ["Звучить знайомо.", "It sounds familiar."],
+  ["Повністю згоден.", "I couldn't agree more."],
+  ["Що ще?", "What else?"],
+  ["Знову починається.", "Here we go again."],
+  ["Напевно, так.", "I guess so."],
+  ["Дай перевірю.", "Let me check."],
+  ["Цілком справедливо / Гаразд, приймається.", "Fair enough."],
+  ["Дай подивитися.", "Let me see."],
+  ["Дай подумати.", "Let me think."],
+  ["Дозволь тобі допомогти.", "Let me help you."],
+  ["Дозволь пояснити.", "Let me explain."],
+  ["Дозволь дещо запитати.", "Let me ask you something."],
+  ["Дай спробую.", "Let me try."],
+  ["Дай мені закінчити.", "Let me finish."],
+  ["Я пізніше тобі відповім.", "Let me get back to you."],
+  ["Дозволь тобі показати.", "Let me show you."],
+  ["Дозволь тобі дещо сказати.", "Let me tell you something."],
+  ["Дай мені з'ясувати.", "Let me find out."],
+  ["Дозволь мені цим зайнятися.", "Let me handle it."],
+  ["Дай мені поглянути.", "Let me take a look."],
+  ["Дай переконаюся.", "Let me make sure."],
+  ["Дай вгадаю.", "Let me guess."],
+  ["Дай мені спочатку це закінчити.", "Let me finish this first."],
+  ["Дозволь я тобі це принесу / дістану.", "Let me get that for you."],
+  ["Дай знати, що ти про це думаєш.", "Let me know what you think."],
+  ["Це неважливо.", "It doesn't matter."],
+  ["Не можу дочекатися!", "I can't wait!"],
+  ["Ти впораєшся!", "You got this!"],
+  ["Я до цього звик.", "I'm used to it."],
+  ["Це не така вже й проблема.", "That's not a big deal."],
+  ["Я зовсім забув.", "I totally forgot."],
+  ["Це залежить.", "It depends."],
+  ["Не зрозумій мене неправильно.", "Don't get me wrong."],
+  ["Я просто кажу.", "I'm just saying."],
+  ["Як завжди.", "As usual."],
+  ["Я саме збираюся виходити.", "I'm just about to leave."],
+  ["Я так і думав.", "That's what I thought."],
+  ["Я нічого не міг із собою вдіяти.", "I couldn't help it."],
+  ["Я зовсім про це забув.", "It slipped my mind."],
+  ["Який збіг!", "What a coincidence!"],
+  ["Боюся, що так.", "I'm afraid so."],
+  ["Не зовсім / Не дуже.", "Not really."],
+  ["Це залежить від тебе.", "It depends on you."],
+  ["Я візьму це до уваги.", "I'll keep that in mind."],
+  ["Не квап мене.", "Don't rush me."],
+  ["Я зараз повернуся.", "I'll be right back."],
+  ["Це вирішувати тобі.", "That's up to you."],
+  ["Я не хотів цього робити.", "I didn't mean to."],
+  ["Почувайся як удома.", "Make yourself at home."],
+  ["Я поспішаю.", "I'm in a hurry."],
+  ["Нічого страшного.", "No big deal."],
+  ["Чим займаєшся?", "What are you up to?"],
+  ["Я за / Я не проти цього.", "I'm down for that."],
+  ["Саме це я й маю на увазі.", "That's exactly what I mean."],
+  ["Я хотів запитати...", "I was wondering..."],
+  ["Наскільки я можу судити.", "As far as I can tell."],
+  ["Спробуй.", "Give it a try."],
+  ["Я поступово до цього звикаю.", "I'm getting used to it."],
+  ["Це нагадало мені...", "That reminds me..."],
+  ["Я цього не очікував.", "I didn't see that coming."],
+  ["Воно того не варте.", "It's not worth it."],
+  ["Мені просто цікаво.", "I'm just curious."],
+  ["У твоїх словах є сенс.", "You have a point."],
+  ["Я подумаю над цим.", "I'll think about it."],
+  ["Дозволь мені подумати про це.", "Let me think about it."],
+  ["Що ти маєш на увазі?", "What do you mean by that?"],
+  ["Я не впевнений щодо цього.", "I'm not sure about that."],
+  ["Наскільки мені відомо.", "As far as I know."],
+  ["Це звучить цікаво.", "That sounds interesting."],
+  ["Я в цьому розберуся.", "I'll figure it out."],
+  ["Чесно кажучи.", "To be honest with you."],
+  ["Варто спробувати.", "It's worth trying."]
+];
+
+let questions = [];
+let current = 0;
+let score = 0;
+let answered = false;
+
+function normalize(text) {
+  return text.toLowerCase()
+    .trim()
+    .replace(/[.,!?;:'"“”‘’…]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function shuffle(array) {
+  const copy = [...array];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function startQuiz() {
+  questions = shuffle(phrases);
+  current = 0;
+  score = 0;
+
+  document.getElementById("quiz").classList.remove("hidden");
+  document.getElementById("finish").classList.add("hidden");
+  document.getElementById("total").textContent = questions.length;
+
+  updateScore();
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+
+  const item = questions[current];
+
+  document.getElementById("question").textContent = item[0];
+  document.getElementById("counter").textContent =
+    `Питання ${current + 1} із ${questions.length}`;
+
+  const percent = (current / questions.length) * 100;
+  document.getElementById("percentage").textContent =
+    Math.round(percent) + "%";
+  document.getElementById("progressBar").style.width = percent + "%";
+
+  document.getElementById("userAnswer").value = "";
+  document.getElementById("feedback").innerHTML = "";
+  document.getElementById("checkBtn").disabled = false;
+  document.getElementById("nextBtn").disabled = true;
+
+  document.getElementById("nextBtn").textContent =
+    current === questions.length - 1
+      ? "Завершити тест"
+      : "Наступна фраза →";
+
+  document.getElementById("userAnswer").focus();
+}
+
+function checkAnswer() {
+  if (answered) return;
+
+  const input = normalize(document.getElementById("userAnswer").value);
+
+  if (!input) {
+    document.getElementById("feedback").innerHTML =
+      '<div class="error">Спочатку введи свою відповідь.</div>';
+    return;
+  }
+
+  const correctAnswer = normalize(questions[current][1]);
+
+  if (input === correctAnswer) {
+    score++;
+    document.getElementById("feedback").innerHTML =
+      '<div class="success">Чудово! Правильна відповідь! 🎉</div>';
+  } else {
+    document.getElementById("feedback").innerHTML =
+      `<div class="error">
+        Не зовсім правильно.
+        <div class="answer">Правильна відповідь: ${questions[current][1]}</div>
+      </div>`;
+  }
+
+  answered = true;
+  document.getElementById("checkBtn").disabled = true;
+  document.getElementById("nextBtn").disabled = false;
+  updateScore();
+}
+
+function showAnswer() {
+  if (answered) return;
+
+  document.getElementById("feedback").innerHTML =
+    `<div class="success">
+      Правильна відповідь:
+      <div class="answer">${questions[current][1]}</div>
+    </div>`;
+
+  answered = true;
+  document.getElementById("checkBtn").disabled = true;
+  document.getElementById("nextBtn").disabled = false;
+}
+
+function clearAnswer() {
+  if (answered) return;
+  document.getElementById("userAnswer").value = "";
+  document.getElementById("feedback").innerHTML = "";
+  document.getElementById("userAnswer").focus();
+}
+
+function nextQuestion() {
+  if (!answered) return;
+
+  current++;
+
+  if (current < questions.length) {
+    showQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function updateScore() {
+  document.getElementById("score").textContent = score;
+}
+
+function finishQuiz() {
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("finish").classList.remove("hidden");
+  document.getElementById("progressBar").style.width = "100%";
+
+  document.getElementById("finalScore").textContent =
+    `Твій результат: ${score} із ${questions.length}`;
+
+  let message;
+
+  const percent = score / questions.length;
+
+  if (percent === 1) {
+    message = "Ідеально! Ти знаєш усі фрази! 🏆";
+  } else if (percent >= 0.8) {
+    message = "Чудовий результат! Продовжуй у тому ж дусі!";
+  } else if (percent >= 0.6) {
+    message = "Добре! Але деякі фрази варто повторити.";
+  } else {
+    message = "Повтори фрази та спробуй ще раз. У тебе вийде!";
+  }
+
+  document.getElementById("finalMessage").textContent = message;
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+
+document.getElementById("userAnswer").addEventListener("keydown", function(event) {
+  if (event.ctrlKey && event.key === "Enter") {
+    checkAnswer();
+  }
+});
+
+startQuiz();
+</script>
+</body>
+</html>
